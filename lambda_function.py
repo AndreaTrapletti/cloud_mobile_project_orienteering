@@ -3,49 +3,55 @@ import json
 import boto3
 from datetime import date
 from xml.dom import minidom
-from lib import funzioni,Simulatore
+from lib import funzioni
 f1 = funzioni.func()
-simulatore = Simulatore.simulator()
 contFile = 1
-
-bucket_name= "xmlverdi"
+bucket_name= "garetgv"
 
 def lambda_handler(event, context):
-    
+    global contatore
+    global contFile
+    global bucket_name
     metodo = event["httpMethod"]
-    global bucket_name, contFile
     s3_client = boto3.client("s3")
     s3 = boto3.resource("s3")
+    
+    
     if metodo == "POST" :
         content = event["body"]
-        
-        if content[0]!="<":
-            content= f1.pulizia(content)
+        if content[0] != "<":
+            content = f1.pulizia(content)
+            
             nomefile = "fileintero" + str(contFile) + ".xml"
-            filepath = "fileinteri/" + nomefile
+            
             sess= boto3.Session(region_name='us-east-1')
             ddb= sess.client('dynamodb')
             table = 'GareOrienteering'
-            s3.Bucket(bucket_name).put_object(Key=filepath, Body = content)
-            contenutofile =s3_client.get_object(Bucket=bucket_name, Key=filepath)["Body"].read() 
-            contFile= contFile + 1
+            s3.Bucket(bucket_name).put_object(Key=nomefile, Body = content)
+            contenutofile =s3_client.get_object(Bucket=bucket_name, Key=nomefile)["Body"].read() #modifiche da qui
+            contFile = contFile + 1
             f1.caricamentoDB(contenutofile)
+            s3_client.delete_object(Bucket=bucket_name, Key = nomefile)
+            
             return{
                 'statusCode': 200,
-                'body': content
-            }
+                'body': json.dumps("fatto")
+                }
         else:
             encoded_string = content.encode("utf-8")
             f1.caricamentoDB(encoded_string)
+            
             return {
                 'statusCode': 200,
                 'body': event["body"]
             }
     elif metodo == "GET" :
+        
         key = event["path"]
         key = key.split("/")
         lung = len(key)-1
         bucket = s3.Bucket(bucket_name)
+        
         if key[lung] == bucket_name:
             
             listanomi=[]
@@ -54,8 +60,8 @@ def lambda_handler(event, context):
             return {
                 'statusCode': 200,
                 'body': json.dumps(listanomi)
-                }
-        elif key[lung-1]=="fileinteri":
+                }  
+        elif key[lung-1] == "fileinteri":
             path = key[lung-1]+"/"+key[lung]
             file_content = s3_client.get_object(Bucket=bucket_name, Key=path)["Body"].read()
             return{
@@ -65,24 +71,14 @@ def lambda_handler(event, context):
         else:
             file_content = s3_client.get_object(Bucket=bucket_name, Key=key[lung])["Body"].read()
             return{
+                
                 'statusCode': 200,
                 'body': file_content
             };
-    elif metodo == "PUT":
-        content = event["body"] 
-        
-        lista = simulatore.simulatore(content)
+  
+    else:
         return{
             'statusCode': 200,
-            'body': json.dumps(lista)
+            'body': json.dumps("Utilizzare un get o un post")
         }
-        
-        
-    else: #nel caso in futuro implementeremo altri metodi, al momento non dovrebbe mai servire
-        return{
-            'statusCode': 200,
-            'body': json.dumps("cribbio metodo sbagliato")
-        }
-        
-
-        
+   
