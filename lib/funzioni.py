@@ -5,7 +5,7 @@ from datetime import date
 from xml.dom import minidom
 nomiGare=["roma","napoli"]
 contGare=[1,2]
-bucket_name= "xmlverdi" #controllare nome 
+bucket_name= "garetgv"
 
 class func: 
     def pulizia(self, contenuto):
@@ -35,7 +35,6 @@ class func:
         else:
             nomiGare.append(nome)
             contGare.append(1)
-            print (contGare)
             return 1
             
     def caricamentoDB (self,content):
@@ -46,10 +45,11 @@ class func:
         gare=  xmldoc.getElementsByTagName('ClassResult')
         sess= boto3.Session(region_name='us-east-1')
         ddb= sess.client('dynamodb')
-        table = 'GareOrienteering' 
+        table = 'GareOrienteering'
         for i in gare:
             nome_gara= nome + str(self.get_numb(nome))
             file_name = nome_gara + ".xml"
+            categoria = i.getElementsByTagName("Name")
             s3 = boto3.resource("s3")
             s3.Bucket(bucket_name).put_object(Key=file_name, Body = i.toxml())
                     
@@ -59,6 +59,9 @@ class func:
                     },
                 "data": {
                     "S": str(date.today())
+                    },
+                "Categoria": {
+                    "S": categoria[0].firstChild.data
                     },
                 "nome_file": {
                     "S": file_name
