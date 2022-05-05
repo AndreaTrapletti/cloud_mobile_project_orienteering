@@ -2,5 +2,5 @@
   progetto tecnologie cloud e mobile
 -  Nel file lambdaFunction è presente il codice principale della funzione lambda, che smista in base al tipo di richiesta che riceve. 
 - Nel file funzioni sono presenti funzioni utilizzate dalla funzione lambda principale.
-- Nel file Simulatore è presente la funzione per simulare una gara, per chiamarla bisogna effetuare una richiesta PUT e inserirvi un body contenente almeno un ClassResult.
+- Nella cartella Simulatore è presente il file python simulatore (che utilizza la classe presente nel file funzioni.py).
 - nella cartella authorizer è presente il file py contente la funzione lambda per l'autorizzazione
