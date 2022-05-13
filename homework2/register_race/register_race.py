@@ -1,9 +1,10 @@
 import smtplib
 import json,boto3
 from random import randint
-
+counter = 0
 
 def lambda_handler(event, context):
+    global counter
     uniquecode = uniquecodegen()
     nome_gara = event["queryStringParameters"]["race_name"]
     date = event["queryStringParameters"]["race_date"]
@@ -30,8 +31,18 @@ def lambda_handler(event, context):
           "SecretToken": {
                 "S": token
           },
-  }
-
+    }
+    try:
+        ddb.get_item(TableName=table, Key={
+            "race_id" : {
+                "S" : id
+            }
+        },
+        )
+        id = id + str(counter)
+        counter = counter + 1
+    except KeyError:
+        print("race id non in conflitto")
     ddb.put_item(TableName=table, Item=item)
     item = {
         "race_id" : id,
