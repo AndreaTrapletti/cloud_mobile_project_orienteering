@@ -94,25 +94,14 @@ def lambda_handler(event, context):
             file = s3_client.get_object(Bucket=bucket_name, Key=filename)["Body"].read()
             
             xmldoc = minidom.parseString(file)
-            lista  = xmldoc.getElementsByTagName("TeamResult")
+            lista  = xmldoc.getElementsByTagName("ClassResult")
             atleti = []
-            for x in range(len(lista)):
+            
                    
-                N_organizzazione = lista[x].getElementsByTagName("Organisation")
-               
-                if len(N_organizzazione) == 1:
-                    if lista[x].getElementsByTagName('Name')[1].firstChild.data == organizzazione:
-
-                        for y in range(len(lista[x].getElementsByTagName("Person"))):
-                            atleta = str(lista[x].getElementsByTagName("Person")[y].getElementsByTagName("Family")[0].firstChild.data) + " " + str(lista[x].getElementsByTagName("Person")[y].getElementsByTagName("Given")[0].firstChild.data)
-                            atleti.append(atleta)
-                else:
-                    membri = lista[x].getElementsByTagName("TeamMemberResult")
-                    a = len(N_organizzazione) - len(membri)
-                    for k in range(a, len(N_organizzazione)):
-                        if N_organizzazione[k].getElementsByTagName("Name")[0].firstChild.data == organizzazione: 
-                            atleta = str(membri[k-a].getElementsByTagName("Family")[0].firstChild.data) + " " + str(membri[k-a].getElementsByTagName("Given")[0].firstChild.data)
-                            atleti.append(atleta)
+            for k in range(len(lista[0].getElementsByTagName("PersonResult"))):
+                if lista[0].getElementsByTagName("Organisation")[k].getElementsByTagName("Name")[0].firstChild.data == organizzazione: 
+                    atleta = str(lista[0].getElementsByTagName("PersonResult")[k].getElementsByTagName("Family")[0].firstChild.data) + " " + str(lista[0].getElementsByTagName("PersonResult")[k].getElementsByTagName("Given")[0].firstChild.data)
+                    atleti.append(atleta)
                     
             atleti = sorted(atleti, key=lambda x:(x[0]))        
             return {
@@ -124,7 +113,7 @@ def lambda_handler(event, context):
        return { 
             'statusCode': 300,
             'body': json.dumps("ERRORE: Ricontrollare endpoint inserito")
-                 }
+                }
 
 
 
