@@ -1,4 +1,5 @@
 import json, boto3, botocore.exceptions
+import re
 from xml.dom import minidom
 from lib import func
 from boto3.dynamodb.conditions import Key
@@ -16,18 +17,25 @@ def lambda_handler(event, context):
         table = "TokenTable"
         TableItems = ddb.scan(TableName = table)["Items"]
         item ={}
+        y = '{ "evento": ['
         for x in range(len(TableItems)): 
-            evento = "evento"+ str(x+1)
             gara = {
                 
                 "race_name" : TableItems[x]["raceName"]["S"],
                 "race_date" : TableItems[x]["raceDate"]["S"],
                 "race_id"   : TableItems[x]["race_id"]["S"]
             }
-            item[evento]=gara
+            print(gara)
+            if x != len(TableItems) -1 :
+                y = y + str(gara) + ","
+            else:
+                y = y + str(gara) 
+            
+        y = y + "]}"
+        y = re.sub('[\']', '\"', y)
         return {
             'statusCode': 200,
-            'body': json.dumps(item)
+            'body': y
         }
     elif path.split("?")[0]=="list_classes":
         sess= boto3.Session(region_name='us-east-1')
