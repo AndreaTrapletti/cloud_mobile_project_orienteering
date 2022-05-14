@@ -8,13 +8,26 @@ def lambda_handler(event, context):
     uniquecode = uniquecodegen()
     nome_gara = event["queryStringParameters"]["race_name"]
     date = event["queryStringParameters"]["race_date"]
+    print(date)
     email = event["queryStringParameters"]["email"]
-    date = date.split("/")
-    id = nome_gara[0]+nome_gara[1] + nome_gara[2]+ date[1]+date[2]
+    date_split = date.split("/")
+    id = nome_gara[0]+nome_gara[1] + nome_gara[2]+ date_split[1]+date_split[2]
     token = nome_gara+'_'+uniquecode
     sess= boto3.Session(region_name='us-east-1')
     ddb= sess.client('dynamodb')
     table = 'TokenTable'
+    
+    try:
+        ddb.get_item(TableName=table, Key={
+            "race_id" : {
+                "S" : id
+            }
+        },
+        )
+        id = id + str(counter)
+        counter = counter + 1
+    except KeyError:
+        print("race id non in conflitto")
     item = {
           "race_id": {
                 "S": id
@@ -32,17 +45,6 @@ def lambda_handler(event, context):
                 "S": token
           },
     }
-    try:
-        ddb.get_item(TableName=table, Key={
-            "race_id" : {
-                "S" : id
-            }
-        },
-        )
-        id = id + str(counter)
-        counter = counter + 1
-    except KeyError:
-        print("race id non in conflitto")
     ddb.put_item(TableName=table, Item=item)
     item = {
         "race_id" : id,
